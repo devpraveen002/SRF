@@ -1,0 +1,11 @@
+.form-group {
+    margin-bottom: 15px;
+}
+
+.text-danger {
+    font-size: 0.85rem;
+}
+
+.table th, .table td {
+    vertical-align: middle;
+}
