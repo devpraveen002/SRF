@@ -10,76 +10,81 @@
             <h4>Edit Student</h4>
         </div>
         <div class="card-body">
-            <form asp-action="Edit">
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                <input type="hidden" asp-for="Id" />
+            <form action="/Student/Edit/@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Id" value="@Model.Id" />
 
                 <div class="form-group mb-3">
-                    <label asp-for="Name" class="control-label"></label>
-                    <input asp-for="Name" class="form-control" />
-                    <span asp-validation-for="Name" class="text-danger"></span>
+                    <label for="name">Name</label>
+                    <input type="text" class="form-control" id="name" name="Name" value="@Model.Name" placeholder="Enter Name" required>
+                    <span class="text-danger"></span>
                 </div>
 
                 <div class="form-group mb-3">
-                    <label asp-for="Mobile" class="control-label"></label>
-                    <input asp-for="Mobile" class="form-control" />
-                    <span asp-validation-for="Mobile" class="text-danger"></span>
+                    <label for="mobile">Mobile</label>
+                    <input type="text" class="form-control" id="mobile" name="Mobile" value="@Model.Mobile" placeholder="Enter Mobile Number" required>
+                    <span class="text-danger"></span>
                 </div>
 
                 <div class="form-group mb-3">
-                    <label asp-for="Gender" class="control-label"></label>
+                    <label>Gender</label>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" asp-for="Gender" id="male" value="Male">
+                        <input class="form-check-input" type="radio" name="Gender" id="male" value="Male" @(Model.Gender == "Male" ? "checked" : "") required>
                         <label class="form-check-label" for="male">Male</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" asp-for="Gender" id="female" value="Female">
+                        <input class="form-check-input" type="radio" name="Gender" id="female" value="Female" @(Model.Gender == "Female" ? "checked" : "")>
                         <label class="form-check-label" for="female">Female</label>
                     </div>
-                    <span asp-validation-for="Gender" class="text-danger"></span>
+                    <span class="text-danger"></span>
                 </div>
 
                 <div class="form-group mb-3">
-                    <label asp-for="Email" class="control-label"></label>
-                    <input asp-for="Email" class="form-control" />
-                    <span asp-validation-for="Email" class="text-danger"></span>
+                    <label for="email">Email</label>
+                    <input type="email" class="form-control" id="email" name="Email" value="@Model.Email" placeholder="Enter Email" required>
+                    <span class="text-danger"></span>
                 </div>
 
                 <div class="form-group mb-3">
-                    <label asp-for="Address" class="control-label"></label>
-                    <textarea asp-for="Address" class="form-control" rows="3"></textarea>
-                    <span asp-validation-for="Address" class="text-danger"></span>
+                    <label for="address">Address</label>
+                    <textarea class="form-control" id="address" name="Address" rows="3" placeholder="Enter Address">@Model.Address</textarea>
+                    <span class="text-danger"></span>
                 </div>
 
                 <div class="form-group mb-3">
-                    <label asp-for="DOB" class="control-label"></label>
-                    <input asp-for="DOB" class="form-control" />
-                    <span asp-validation-for="DOB" class="text-danger"></span>
+                    <label for="dob">Date of Birth</label>
+                    <input type="date" class="form-control" id="dob" name="DOB" value="@Model.DOB.ToString("yyyy-MM-dd")" required>
+                    <span class="text-danger"></span>
                 </div>
 
                 <div class="form-group mb-3">
-                    <label asp-for="Class" class="control-label"></label>
-                    <input asp-for="Class" class="form-control" />
-                    <span asp-validation-for="Class" class="text-danger"></span>
+                    <label for="class">Class</label>
+                    <input type="text" class="form-control" id="class" name="Class" value="@Model.Class" placeholder="Enter Class" required>
+                    <span class="text-danger"></span>
                 </div>
 
                 <div class="form-group mb-3">
-                    <label asp-for="FatherName" class="control-label"></label>
-                    <input asp-for="FatherName" class="form-control" />
-                    <span asp-validation-for="FatherName" class="text-danger"></span>
+                    <label for="fatherName">Father's Name</label>
+                    <input type="text" class="form-control" id="fatherName" name="FatherName" value="@Model.FatherName" placeholder="Enter Father's Name" required>
+                    <span class="text-danger"></span>
                 </div>
 
                 <div class="form-group mb-3">
-                    <label asp-for="MotherName" class="control-label"></label>
-                    <input asp-for="MotherName" class="form-control" />
-                    <span asp-validation-for="MotherName" class="text-danger"></span>
+                    <label for="motherName">Mother's Name</label>
+                    <input type="text" class="form-control" id="motherName" name="MotherName" value="@Model.MotherName" placeholder="Enter Mother's Name" required>
+                    <span class="text-danger"></span>
                 </div>
 
                 <div class="form-group">
-                    <input type="submit" value="Save" class="btn btn-primary" />
-                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <a href="/Student/Index" class="btn btn-secondary">Back to List</a>
                 </div>
             </form>
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger mt-3">@TempData["ErrorMessage"]</div>
+            }
         </div>
     </div>
 </div>

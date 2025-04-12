@@ -18,7 +18,12 @@ public class StudentController : Controller
     // GET: Student
     public async Task<IActionResult> Index()
     {
-        return View(await _context.Students.ToListAsync());
+        var students = await _context.Students
+        .FromSqlRaw("EXEC sp_GetAllStudents")
+        .ToListAsync();
+
+        ViewBag.Students = students;
+        return View(new Student());
     }
 
     // GET: Student/Create
@@ -47,9 +52,10 @@ public class StudentController : Controller
         }
 
         var idParam = new SqlParameter("@Id", id);
-        var student = await _context.Students
+        var student = _context.Students
             .FromSqlRaw("EXEC sp_GetStudentById @Id", idParam)
-            .FirstOrDefaultAsync();
+            .AsEnumerable()
+            .FirstOrDefault();
 
         if (student == null)
         {
@@ -79,18 +85,28 @@ public class StudentController : Controller
 
             try
             {
-                var result = await _context.Database
+                await _context.Database
                     .ExecuteSqlRawAsync("EXEC sp_InsertStudent @Name, @Mobile, @Gender, @Email, @Address, @DOB, @Class, @FatherName, @MotherName",
                         namePara, mobilePara, genderPara, emailPara, addressPara, dobPara, classPara, fatherNamePara, motherNamePara);
 
-                return Json(new { success = true, message = "Student added successfully!" });
+                TempData["SuccessMessage"] = "Student added successfully!";
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Error: " + ex.Message });
+                TempData["ErrorMessage"] = "Error: " + ex.Message;
             }
         }
-        return Json(new { success = false, message = "Validation failed.", errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
+        else
+        {
+            TempData["ErrorMessage"] = "Validation failed.";
+        }
+
+        var students = await _context.Students
+            .FromSqlRaw("EXEC sp_GetAllStudents")
+            .ToListAsync();
+        ViewBag.Students = students;
+        return View("Index", student);
     }
 
     // GET: Student/Edit/5
@@ -101,15 +117,18 @@ public class StudentController : Controller
             return NotFound();
         }
 
-        var idParam = new SqlParameter("@Id", id);
-        var student = await _context.Students
-            .FromSqlRaw("EXEC sp_GetStudentById @Id", idParam)
-            .FirstOrDefaultAsync();
+        // Call the stored procedure using ExecuteSqlRaw and then get the result separately
+        var parameter = new SqlParameter("@Id", id);
+        var student = _context.Students
+            .FromSqlRaw("EXEC sp_GetStudentById @Id", parameter)
+            .AsEnumerable() // This moves execution to client side
+            .FirstOrDefault();
 
         if (student == null)
         {
             return NotFound();
         }
+
         return View(student);
     }
 
@@ -143,25 +162,49 @@ public class StudentController : Controller
                     .ExecuteSqlRawAsync("EXEC sp_UpdateStudent @Id, @Name, @Mobile, @Gender, @Email, @Address, @DOB, @Class, @FatherName, @MotherName",
                         idPara, namePara, mobilePara, genderPara, emailPara, addressPara, dobPara, classPara, fatherNamePara, motherNamePara);
 
+                TempData["SuccessMessage"] = "Student updated successfully!";
                 return RedirectToAction(nameof(Index));
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
-                if (!StudentExists(student.Id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                TempData["ErrorMessage"] = "Error: " + ex.Message;
             }
         }
+        else
+        {
+            TempData["ErrorMessage"] = "Validation failed.";
+        }
+
         return View(student);
+    }
+
+    // GET: Student/Delete/5
+    public async Task<IActionResult> Delete(int? id)
+    {
+        if (id == null)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            // Using stored procedure to delete student
+            var idPara = new SqlParameter("@Id", id);
+            await _context.Database.ExecuteSqlRawAsync("EXEC sp_DeleteStudent @Id", idPara);
+
+            TempData["SuccessMessage"] = "Student deleted successfully!";
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = "Error deleting student: " + ex.Message;
+        }
+
+        return RedirectToAction(nameof(Index));
     }
 
     // POST: Student/Delete/5
     [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         try
@@ -169,12 +212,15 @@ public class StudentController : Controller
             // Using stored procedure to delete student
             var idPara = new SqlParameter("@Id", id);
             await _context.Database.ExecuteSqlRawAsync("EXEC sp_DeleteStudent @Id", idPara);
-            return Json(new { success = true });
+
+            TempData["SuccessMessage"] = "Student deleted successfully!";
         }
         catch (Exception ex)
         {
-            return Json(new { success = false, message = "Error: " + ex.Message });
+            TempData["ErrorMessage"] = "Error deleting student: " + ex.Message;
         }
+
+        return RedirectToAction(nameof(Index));
     }
 
     private bool StudentExists(int id)
